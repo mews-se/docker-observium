@@ -21,9 +21,13 @@ Docker Hub as **`mewsse/observium`** — same builds, same tags.
 ```
 git clone https://github.com/mews-se/docker-observium.git
 cd docker-observium
-cp .env.example .env   # edit at least DB_PASS and the admin credentials
+cp .env.example .env   # set DB_PASS and the admin credentials
 docker compose up -d
 ```
+
+The example file ships without passwords, so compose stops with
+`set DB_PASS in .env` until you pick your own. Set them before the first run:
+the database keeps whatever password it was initialised with.
 
 Then open `http://<host>:8080` and log in with the admin credentials from
 your `.env`.
