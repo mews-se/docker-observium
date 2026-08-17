@@ -82,6 +82,11 @@ Compose picks up the freshly built tag on the next `docker compose up -d`.
 The Dockerfile downloads the latest CE tarball at build time; pass
 `--build-arg OBSERVIUM_REFRESH=$(date +%s)` to force a fresh download.
 
+Observium overwrites that tarball in place, so a build that gets replaced is
+gone upstream. [observium-ce-archive](https://github.com/mews-se/observium-ce-archive)
+keeps every build it sees, which is where to look if you need to pin an older
+one or observium.org is unreachable on a build day.
+
 ## License
 
 The files in this repository are MIT licensed. Observium itself is **not**
