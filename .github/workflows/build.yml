@@ -79,7 +79,19 @@ jobs:
                   done
                   curl -fsI http://localhost:8080/
                   docker logs web 2>&1 | grep -q "User admin added successfully"
-                  docker rm -f web db
+                  docker run -d --name poller --network obs-test \
+                      -e DB_PASS=smoketest \
+                      observium-test poller
+                  for i in $(seq 1 30); do
+                      if docker exec poller test -f /etc/cron.d/observium; then break; fi
+                      sleep 2
+                  done
+                  # run one job exactly as cron will: its PATH, its user
+                  cronpath="$(docker exec poller sed -n 's/^PATH=//p' /etc/cron.d/observium)"
+                  test -n "$cronpath"
+                  docker exec poller su -s /bin/sh www-data -c "env -i PATH=$cronpath /opt/observium/observium-wrapper poller"
+                  docker exec poller su -s /bin/sh www-data -c "env -i PATH=$cronpath env php -v" >/dev/null
+                  docker rm -f poller web db
                   docker network rm obs-test
 
             - name: Extract CE version

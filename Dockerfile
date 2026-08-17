@@ -2,6 +2,7 @@ FROM php:8.4-apache
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         rrdtool snmp fping whois cron mariadb-client \
+        python3 python3-pymysql \
         libpng-dev libjpeg-dev libfreetype6-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" gd mysqli bcmath \

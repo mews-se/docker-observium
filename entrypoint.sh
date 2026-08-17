@@ -66,12 +66,14 @@ case "$ROLE" in
             sleep 5
         done
 
+        # cron gives jobs PATH=/usr/bin:/bin - php in this image lives in /usr/local/bin
         cat > /etc/cron.d/observium <<'EOF'
-33  */6 * * *  www-data  /opt/observium/observium-wrapper discovery >> /dev/null 2>&1
-*/5 *   * * *  www-data  /opt/observium/observium-wrapper discovery --host new >> /dev/null 2>&1
-*/5 *   * * *  www-data  /opt/observium/observium-wrapper poller >> /dev/null 2>&1
-13  5   * * *  www-data  /opt/observium/housekeeping.php -ysel >> /dev/null 2>&1
-47  4   * * *  www-data  /opt/observium/housekeeping.php -yrptb >> /dev/null 2>&1
+PATH=/usr/local/bin:/usr/bin:/bin
+33  */6 * * *  www-data  /opt/observium/observium-wrapper discovery >> /dev/null 2>> /opt/observium/logs/cron-errors.log
+*/5 *   * * *  www-data  /opt/observium/observium-wrapper discovery --host new >> /dev/null 2>> /opt/observium/logs/cron-errors.log
+*/5 *   * * *  www-data  /opt/observium/observium-wrapper poller >> /dev/null 2>> /opt/observium/logs/cron-errors.log
+13  5   * * *  www-data  /opt/observium/housekeeping.php -ysel >> /dev/null 2>> /opt/observium/logs/cron-errors.log
+47  4   * * *  www-data  /opt/observium/housekeeping.php -yrptb >> /dev/null 2>> /opt/observium/logs/cron-errors.log
 EOF
         chmod 644 /etc/cron.d/observium
 
