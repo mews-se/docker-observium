@@ -1,0 +1,56 @@
+services:
+    db:
+        image: mariadb:11
+        restart: unless-stopped
+        environment:
+            - MARIADB_RANDOM_ROOT_PASSWORD=yes
+            - MARIADB_DATABASE=${DB_NAME:-observium}
+            - MARIADB_USER=${DB_USER:-observium}
+            - MARIADB_PASSWORD=${DB_PASS:?set DB_PASS in .env}
+        volumes:
+            - db:/var/lib/mysql
+        healthcheck:
+            test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+            interval: 5s
+            timeout: 5s
+            retries: 30
+
+    web:
+        image: ghcr.io/mews-se/observium:latest
+        restart: unless-stopped
+        ports:
+            - ${HTTP_PORT:-8080}:80
+        environment:
+            - DB_NAME=${DB_NAME:-observium}
+            - DB_USER=${DB_USER:-observium}
+            - DB_PASS=${DB_PASS}
+            - TZ=${TZ:-UTC}
+            - OBSERVIUM_ADMIN_USER=${OBSERVIUM_ADMIN_USER:-}
+            - OBSERVIUM_ADMIN_PASS=${OBSERVIUM_ADMIN_PASS:-}
+        volumes:
+            - rrd:/opt/observium/rrd
+            - logs:/opt/observium/logs
+        depends_on:
+            db:
+                condition: service_healthy
+
+    poller:
+        image: ghcr.io/mews-se/observium:latest
+        restart: unless-stopped
+        command: poller
+        environment:
+            - DB_NAME=${DB_NAME:-observium}
+            - DB_USER=${DB_USER:-observium}
+            - DB_PASS=${DB_PASS}
+            - TZ=${TZ:-UTC}
+        volumes:
+            - rrd:/opt/observium/rrd
+            - logs:/opt/observium/logs
+        depends_on:
+            db:
+                condition: service_healthy
+
+volumes:
+    db:
+    rrd:
+    logs:
