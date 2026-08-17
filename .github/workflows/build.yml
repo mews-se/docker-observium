@@ -17,6 +17,11 @@ on:
 env:
     IMAGE: ghcr.io/${{ github.repository_owner }}/observium
 
+# A push racing the weekly cron could interleave two merge jobs' tag pushes
+concurrency:
+    group: build
+    cancel-in-progress: false
+
 jobs:
     build:
         strategy:
@@ -55,6 +60,7 @@ jobs:
                   context: .
                   load: true
                   tags: observium-test
+                  provenance: false
                   build-args: |
                       OBSERVIUM_REFRESH=${{ github.run_id }}
 
@@ -94,12 +100,29 @@ jobs:
                   docker rm -f poller web db
                   docker network rm obs-test
 
+            - name: Dump container logs on failure
+              if: failure()
+              run: |
+                  for c in web poller db; do
+                      echo "=== $c"; docker logs "$c" 2>&1 | tail -50 || true
+                  done
+
             - name: Extract CE version
               id: version
               run: |
                   ce_version="$(docker run --rm --entrypoint cat observium-test /opt/observium/VERSION | grep -oE '[0-9]+\.[0-9]+' | head -1)"
                   test -n "$ce_version"
                   echo "ce_version=$ce_version" >> "$GITHUB_OUTPUT"
+                  mkdir -p /tmp/versions
+                  echo "$ce_version" > "/tmp/versions/${{ matrix.arch }}"
+
+            - name: Upload version
+              uses: actions/upload-artifact@v4
+              with:
+                  name: version-${{ matrix.arch }}
+                  path: /tmp/versions/*
+                  if-no-files-found: error
+                  retention-days: 1
 
             - name: Push image by digest
               id: push
@@ -107,6 +130,9 @@ jobs:
               with:
                   context: .
                   platforms: ${{ matrix.platform }}
+                  # no provenance attestation: it shows up as an extra
+                  # unknown/unknown platform in registry UIs
+                  provenance: false
                   outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
                   build-args: |
                       OBSERVIUM_REFRESH=${{ github.run_id }}
@@ -140,6 +166,18 @@ jobs:
                   path: /tmp/digests
                   pattern: digest-*
                   merge-multiple: true
+
+            - name: Download versions
+              uses: actions/download-artifact@v4
+              with:
+                  path: /tmp/versions
+                  pattern: version-*
+                  merge-multiple: true
+
+            - name: Check the arch builds agree on the CE version
+              # a CE release published between the two downloads would merge
+              # different versions into one manifest - rerun instead
+              run: test "$(sort -u /tmp/versions/* | wc -l)" -eq 1
 
             - name: Log in to GHCR
               uses: docker/login-action@v3

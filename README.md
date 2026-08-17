@@ -21,7 +21,7 @@ Docker Hub as **`mewsse/observium`** — same builds, same tags.
 ```
 git clone https://github.com/mews-se/docker-observium.git
 cd docker-observium
-cp .env.example .env   # edit at least DB_PASS
+cp .env.example .env   # edit at least DB_PASS and the admin credentials
 docker compose up -d
 ```
 
@@ -74,8 +74,10 @@ Schema upgrades run automatically on container start.
 ## Building locally
 
 ```
-docker compose build web
+docker build -t ghcr.io/mews-se/observium .
 ```
+
+Compose picks up the freshly built tag on the next `docker compose up -d`.
 
 The Dockerfile downloads the latest CE tarball at build time; pass
 `--build-arg OBSERVIUM_REFRESH=$(date +%s)` to force a fresh download.
@@ -86,5 +88,5 @@ The files in this repository are MIT licensed. Observium itself is **not**
 included in the repository; the Docker image downloads the unmodified
 Observium Community Edition tarball from observium.org at build time.
 Observium CE is distributed under its own license (a simplified QPL) —
-see [observium.org](https://www.observium.org/licenses/) for details.
+see [docs.observium.org](https://docs.observium.org/licenses/) for details.
 Observium is a trademark of Observium Limited.

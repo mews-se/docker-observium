@@ -21,6 +21,7 @@ services:
         ports:
             - ${HTTP_PORT:-8080}:80
         environment:
+            - DB_HOST=${DB_HOST:-db}
             - DB_NAME=${DB_NAME:-observium}
             - DB_USER=${DB_USER:-observium}
             - DB_PASS=${DB_PASS}
@@ -30,6 +31,12 @@ services:
         volumes:
             - rrd:/opt/observium/rrd
             - logs:/opt/observium/logs
+        healthcheck:
+            test: ["CMD", "curl", "-fsI", "http://localhost/"]
+            interval: 30s
+            timeout: 5s
+            retries: 5
+            start_period: 90s
         depends_on:
             db:
                 condition: service_healthy
@@ -39,6 +46,7 @@ services:
         restart: unless-stopped
         command: poller
         environment:
+            - DB_HOST=${DB_HOST:-db}
             - DB_NAME=${DB_NAME:-observium}
             - DB_USER=${DB_USER:-observium}
             - DB_PASS=${DB_PASS}
