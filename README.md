@@ -14,7 +14,7 @@ and base image security updates without manual work. Built for `linux/amd64`
 and `linux/arm64` (Raspberry Pi 4/5 and other 64-bit ARM boards work fine).
 
 Published as **`ghcr.io/mews-se/observium`** (primary) and mirrored to
-Docker Hub as **`mewsse/observium`** — same builds, same tags.
+Docker Hub as **`mewsse/observium`**: same builds, same tags.
 
 ## Quick start
 
@@ -96,6 +96,6 @@ one or observium.org is unreachable on a build day.
 The files in this repository are MIT licensed. Observium itself is **not**
 included in the repository; the Docker image downloads the unmodified
 Observium Community Edition tarball from observium.org at build time.
-Observium CE is distributed under its own license (a simplified QPL) —
+Observium CE is distributed under its own license (a simplified QPL);
 see [docs.observium.org](https://docs.observium.org/licenses/) for details.
 Observium is a trademark of Observium Limited.
