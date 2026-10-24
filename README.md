@@ -35,7 +35,16 @@ your `.env`.
 The stack runs three containers: `web` (Apache + PHP), `poller` (cron with
 the standard Observium discovery/poller/housekeeping schedule) and `db`
 (MariaDB). Database schema is created and upgraded automatically on start,
-and the first admin user is created if the user table is empty.
+and the first admin user is created if the user table is empty and both
+admin variables are set. Without them, add one by hand:
+
+```
+docker compose exec web su -s /bin/bash www-data -c './adduser.php <username> <password> 10'
+```
+
+Data lives in the named volumes `db`, `rrd` and `logs`, so back those up
+along with `.env`. Errors from the poller's cron jobs go to `cron-errors.log`
+in `logs`.
 
 ## Environment variables
 
@@ -88,8 +97,8 @@ The Dockerfile downloads the latest CE tarball at build time; pass
 
 Observium overwrites that tarball in place, so a build that gets replaced is
 gone upstream. [observium-ce-archive](https://github.com/mews-se/observium-ce-archive)
-keeps every build it sees, which is where to look if you need to pin an older
-one or observium.org is unreachable on a build day.
+keeps every build it sees. To pin an older one, or to build while observium.org
+is down, point the `curl` URL in the Dockerfile at a tarball from its releases.
 
 ## License
 
